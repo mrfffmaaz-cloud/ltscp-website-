@@ -1,0 +1,266 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-@.]+$');
+    }
+
+    function isValidSlugId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function userEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    function isBootstrapAdmin() {
+      return isSignedIn() && request.auth.token.email is string && userEmail() == 'mrfffmaaz@gmail.com';
+    }
+
+    function hasActiveStaffDoc() {
+      return isSignedIn()
+        && request.auth.token.email is string
+        && exists(/databases/$(database)/documents/staffAccounts/$(userEmail()));
+    }
+
+    function getStaffDoc() {
+      return get(/databases/$(database)/documents/staffAccounts/$(userEmail())).data;
+    }
+
+    function isAdmin() {
+      return isBootstrapAdmin() || (
+        hasActiveStaffDoc() &&
+        getStaffDoc().isActive == true &&
+        getStaffDoc().role == 'admin'
+      );
+    }
+
+    function isStaffOrAdmin() {
+      return isBootstrapAdmin() || (
+        hasActiveStaffDoc() &&
+        getStaffDoc().isActive == true &&
+        (getStaffDoc().role == 'admin' || getStaffDoc().role == 'staff')
+      );
+    }
+
+    // Validation Helpers
+    function isValidSiteSettings(data) {
+      return data.keys().hasAll([
+          'businessName', 'fullName', 'tagline', 'address', 'whatsappNumber',
+          'phoneNumber', 'email', 'hours', 'heroTitle', 'heroSubtitle',
+          'announcementText', 'announcementActive', 'finoMerchantConfigured',
+          'bbpsConfigured', 'irctcAuthorized', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'businessName', 'fullName', 'tagline', 'address', 'whatsappNumber',
+          'phoneNumber', 'email', 'hours', 'heroTitle', 'heroSubtitle',
+          'announcementText', 'announcementActive', 'finoMerchantConfigured',
+          'bbpsConfigured', 'irctcAuthorized', 'updatedAt'
+        ])
+        && data.businessName is string && data.businessName.size() >= 1 && data.businessName.size() <= 60
+        && data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 120
+        && data.tagline is string && data.tagline.size() >= 1 && data.tagline.size() <= 160
+        && data.address is string && data.address.size() >= 1 && data.address.size() <= 240
+        && data.whatsappNumber is string && data.whatsappNumber.size() >= 10 && data.whatsappNumber.size() <= 15 && data.whatsappNumber.matches('^[0-9]{10,15}$')
+        && data.phoneNumber is string && data.phoneNumber.size() >= 8 && data.phoneNumber.size() <= 20
+        && data.email is string && data.email.size() <= 120
+        && data.hours is string && data.hours.size() <= 160
+        && data.heroTitle is string && data.heroTitle.size() >= 1 && data.heroTitle.size() <= 140
+        && data.heroSubtitle is string && data.heroSubtitle.size() >= 1 && data.heroSubtitle.size() <= 260
+        && data.announcementText is string && data.announcementText.size() <= 240
+        && data.announcementActive is bool
+        && data.finoMerchantConfigured is bool
+        && data.bbpsConfigured is bool
+        && data.irctcAuthorized is bool
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll([
+          'id', 'code', 'nameEn', 'nameHi', 'descriptionEn', 'descriptionHi',
+          'iconName', 'order', 'isActive', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'code', 'nameEn', 'nameHi', 'descriptionEn', 'descriptionHi',
+          'iconName', 'order', 'isActive', 'updatedAt'
+        ])
+        && data.id is string && data.id.size() >= 1 && data.id.size() <= 80 && data.id.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.code is string && data.code.size() >= 1 && data.code.size() <= 4
+        && data.nameEn is string && data.nameEn.size() >= 1 && data.nameEn.size() <= 100
+        && data.nameHi is string && data.nameHi.size() >= 1 && data.nameHi.size() <= 120
+        && data.descriptionEn is string && data.descriptionEn.size() <= 280
+        && data.descriptionHi is string && data.descriptionHi.size() <= 320
+        && data.iconName is string && data.iconName.size() >= 1 && data.iconName.size() <= 50
+        && data.order is number
+        && data.isActive is bool
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidService(data) {
+      return data.keys().hasAll([
+          'id', 'categoryId', 'nameEn', 'nameHi', 'shortDescEn', 'shortDescHi',
+          'fullDescEn', 'fullDescHi', 'iconName', 'charge', 'processingTime',
+          'requiredDocuments', 'serviceInfo', 'whatsappTemplate', 'whatsappFields',
+          'isPopular', 'isActive', 'isRegulated', 'order', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'categoryId', 'nameEn', 'nameHi', 'shortDescEn', 'shortDescHi',
+          'fullDescEn', 'fullDescHi', 'iconName', 'charge', 'processingTime',
+          'requiredDocuments', 'serviceInfo', 'whatsappTemplate', 'whatsappFields',
+          'isPopular', 'isActive', 'isRegulated', 'order', 'createdAt', 'updatedAt'
+        ])
+        && data.id is string && data.id.size() >= 1 && data.id.size() <= 100 && data.id.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.categoryId is string && data.categoryId.size() >= 1 && data.categoryId.size() <= 80 && data.categoryId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.nameEn is string && data.nameEn.size() >= 1 && data.nameEn.size() <= 120
+        && data.nameHi is string && data.nameHi.size() >= 1 && data.nameHi.size() <= 140
+        && data.shortDescEn is string && data.shortDescEn.size() >= 1 && data.shortDescEn.size() <= 240
+        && data.shortDescHi is string && data.shortDescHi.size() >= 1 && data.shortDescHi.size() <= 280
+        && data.fullDescEn is string && data.fullDescEn.size() >= 1 && data.fullDescEn.size() <= 1200
+        && data.fullDescHi is string && data.fullDescHi.size() >= 1 && data.fullDescHi.size() <= 1400
+        && data.iconName is string && data.iconName.size() >= 1 && data.iconName.size() <= 50
+        && data.charge is string && data.charge.size() >= 1 && data.charge.size() <= 120
+        && data.processingTime is string && data.processingTime.size() >= 1 && data.processingTime.size() <= 120
+        && data.requiredDocuments is list && data.requiredDocuments.size() <= 15
+        && (data.requiredDocuments.size() == 0 || data.requiredDocuments[0] is string)
+        && data.serviceInfo is list && data.serviceInfo.size() <= 10
+        && (data.serviceInfo.size() == 0 || data.serviceInfo[0] is string)
+        && data.whatsappTemplate is string && data.whatsappTemplate.size() >= 1 && data.whatsappTemplate.size() <= 800
+        && data.whatsappFields is list && data.whatsappFields.size() <= 8
+        && (data.whatsappFields.size() == 0 || data.whatsappFields[0] is string)
+        && data.isPopular is bool
+        && data.isActive is bool
+        && data.isRegulated is bool
+        && data.order is number
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidEnquiry(data) {
+      return data.keys().hasAll([
+          'customerName', 'mobileNumber', 'serviceId', 'serviceName',
+          'message', 'status', 'adminRemarks', 'source', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'customerName', 'mobileNumber', 'serviceId', 'serviceName',
+          'message', 'status', 'adminRemarks', 'source', 'createdAt', 'updatedAt'
+        ])
+        && data.customerName is string && data.customerName.size() >= 2 && data.customerName.size() <= 100
+        && data.mobileNumber is string && data.mobileNumber.size() >= 10 && data.mobileNumber.size() <= 16 && data.mobileNumber.matches('^[0-9+\\-\\s]{10,16}$')
+        && data.serviceId is string && data.serviceId.size() <= 100
+        && data.serviceName is string && data.serviceName.size() >= 1 && data.serviceName.size() <= 120
+        && data.message is string && data.message.size() <= 600
+        && data.status is string && data.status in ['New', 'Contacted', 'Processing', 'Completed', 'Cancelled']
+        && data.adminRemarks is string && data.adminRemarks.size() <= 600
+        && data.source == 'website_form'
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidStaffAccount(data) {
+      return data.keys().hasAll(['email', 'displayName', 'role', 'isActive', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['email', 'displayName', 'role', 'isActive', 'createdAt', 'updatedAt'])
+        && data.email is string && data.email.size() >= 5 && data.email.size() <= 120
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100
+        && data.role is string && data.role in ['admin', 'staff']
+        && data.isActive is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAnalyticsEvent(data) {
+      return data.keys().hasAll(['eventType', 'path', 'serviceId', 'queryText', 'createdAt'])
+        && data.keys().hasOnly(['eventType', 'path', 'serviceId', 'queryText', 'createdAt'])
+        && data.eventType is string && data.eventType in ['page_view', 'service_view', 'whatsapp_intent', 'search']
+        && data.path is string && data.path.size() >= 1 && data.path.size() <= 160
+        && data.serviceId is string && data.serviceId.size() <= 100
+        && data.queryText is string && data.queryText.size() <= 100
+        && data.createdAt is timestamp;
+    }
+
+    // 1. Public Site Settings
+    match /siteSettings/{settingId} {
+      allow get: if isValidSlugId(settingId);
+      allow list: if true;
+      allow create: if isAdmin() && isValidSlugId(settingId) && isValidSiteSettings(incoming()) && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidSlugId(settingId) && isValidSiteSettings(incoming()) && incoming().updatedAt == request.time;
+      allow delete: if false;
+    }
+
+    // 2. Service Categories
+    match /categories/{categoryId} {
+      allow get: if isValidSlugId(categoryId);
+      allow list: if true;
+      allow create: if isAdmin() && isValidSlugId(categoryId) && isValidCategory(incoming()) && incoming().id == categoryId && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidSlugId(categoryId) && isValidCategory(incoming()) && incoming().id == existing().id && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidSlugId(categoryId);
+    }
+
+    // 3. Digital Services
+    match /services/{serviceId} {
+      allow get: if isValidSlugId(serviceId);
+      allow list: if true;
+      allow create: if isAdmin() && isValidSlugId(serviceId) && isValidService(incoming()) && incoming().id == serviceId && incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidSlugId(serviceId) && isValidService(incoming()) && incoming().id == existing().id && incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidSlugId(serviceId);
+    }
+
+    // 4. Customer Enquiries (PII Isolated)
+    match /enquiries/{enquiryId} {
+      allow get: if isStaffOrAdmin() && isValidSlugId(enquiryId);
+      allow list: if isStaffOrAdmin();
+      allow create: if isValidSlugId(enquiryId)
+        && isValidEnquiry(incoming())
+        && incoming().status == 'New'
+        && incoming().adminRemarks == ''
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isStaffOrAdmin()
+        && isValidSlugId(enquiryId)
+        && isValidEnquiry(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().source == existing().source
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (existing().status != 'Completed' && existing().status != 'Cancelled' && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'adminRemarks', 'updatedAt']))
+        );
+      allow delete: if isAdmin() && isValidSlugId(enquiryId);
+    }
+
+    // 5. Staff Accounts
+    match /staffAccounts/{staffEmail} {
+      allow get: if isValidId(staffEmail) && (isAdmin() || (isSignedIn() && request.auth.token.email is string && userEmail() == staffEmail.lower()));
+      allow list: if isAdmin();
+      allow create: if isAdmin() && isValidId(staffEmail) && isValidStaffAccount(incoming()) && incoming().email.lower() == staffEmail.lower() && incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(staffEmail) && isValidStaffAccount(incoming()) && incoming().email.lower() == existing().email.lower() && incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(staffEmail);
+    }
+
+    // 6. Website Analytics Events
+    match /analyticsEvents/{eventId} {
+      allow get: if isStaffOrAdmin() && isValidSlugId(eventId);
+      allow list: if isStaffOrAdmin();
+      allow create: if isValidSlugId(eventId) && isValidAnalyticsEvent(incoming()) && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isAdmin() && isValidSlugId(eventId);
+    }
+  }
+}

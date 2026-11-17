@@ -1,0 +1,6 @@
+{
+  "name": "LTSCP Digital Seva & Cyber Cafe",
+  "description": "Your One Stop Digital Seva & Banking Solution at Maharajpur Chowk, Madhubani, Bihar. Banking, Government Services, Ticket Booking, Online Forms, Recharge & Printing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

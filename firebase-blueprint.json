@@ -1,0 +1,193 @@
+{
+  "entities": {
+    "SiteSettings": {
+      "title": "SiteSettings",
+      "description": "Public business configuration, hero banners, and integration flags for LTSCP Digital Seva & Cyber Cafe.",
+      "type": "object",
+      "properties": {
+        "businessName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "fullName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "tagline": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "address": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "whatsappNumber": { "type": "string", "pattern": "^[0-9]{10,15}$", "maxLength": 15 },
+        "phoneNumber": { "type": "string", "pattern": "^[0-9+\\-\\s]{8,20}$", "maxLength": 20 },
+        "email": { "type": "string", "maxLength": 120 },
+        "hours": { "type": "string", "maxLength": 160 },
+        "heroTitle": { "type": "string", "minLength": 1, "maxLength": 140 },
+        "heroSubtitle": { "type": "string", "minLength": 1, "maxLength": 260 },
+        "announcementText": { "type": "string", "maxLength": 240 },
+        "announcementActive": { "type": "boolean" },
+        "finoMerchantConfigured": { "type": "boolean" },
+        "bbpsConfigured": { "type": "boolean" },
+        "irctcAuthorized": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "businessName",
+        "fullName",
+        "tagline",
+        "address",
+        "whatsappNumber",
+        "phoneNumber",
+        "heroTitle",
+        "heroSubtitle",
+        "announcementActive",
+        "finoMerchantConfigured",
+        "bbpsConfigured",
+        "irctcAuthorized",
+        "updatedAt"
+      ]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Service category metadata (A through G).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$", "maxLength": 80 },
+        "code": { "type": "string", "maxLength": 4 },
+        "nameEn": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "nameHi": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "descriptionEn": { "type": "string", "maxLength": 280 },
+        "descriptionHi": { "type": "string", "maxLength": 320 },
+        "iconName": { "type": "string", "maxLength": 50 },
+        "order": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "code", "nameEn", "nameHi", "iconName", "order", "isActive", "updatedAt"]
+    },
+    "Service": {
+      "title": "Service",
+      "description": "Individual digital service offered by LTSCP with pricing, documents, and WhatsApp template.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$", "maxLength": 100 },
+        "categoryId": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$", "maxLength": 80 },
+        "nameEn": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "nameHi": { "type": "string", "minLength": 1, "maxLength": 140 },
+        "shortDescEn": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "shortDescHi": { "type": "string", "minLength": 1, "maxLength": 280 },
+        "fullDescEn": { "type": "string", "minLength": 1, "maxLength": 1200 },
+        "fullDescHi": { "type": "string", "minLength": 1, "maxLength": 1400 },
+        "iconName": { "type": "string", "maxLength": 50 },
+        "charge": { "type": "string", "maxLength": 120 },
+        "processingTime": { "type": "string", "maxLength": 120 },
+        "requiredDocuments": { "type": "array" },
+        "serviceInfo": { "type": "array" },
+        "whatsappTemplate": { "type": "string", "minLength": 1, "maxLength": 800 },
+        "whatsappFields": { "type": "array" },
+        "isPopular": { "type": "boolean" },
+        "isActive": { "type": "boolean" },
+        "isRegulated": { "type": "boolean" },
+        "order": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "id",
+        "categoryId",
+        "nameEn",
+        "nameHi",
+        "shortDescEn",
+        "shortDescHi",
+        "fullDescEn",
+        "fullDescHi",
+        "iconName",
+        "charge",
+        "processingTime",
+        "requiredDocuments",
+        "serviceInfo",
+        "whatsappTemplate",
+        "whatsappFields",
+        "isPopular",
+        "isActive",
+        "isRegulated",
+        "order",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Enquiry": {
+      "title": "Enquiry",
+      "description": "Customer website enquiry submitted via the optional website enquiry form.",
+      "type": "object",
+      "properties": {
+        "customerName": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "mobileNumber": { "type": "string", "pattern": "^[0-9+\\-\\s]{10,16}$", "maxLength": 16 },
+        "serviceId": { "type": "string", "maxLength": 100 },
+        "serviceName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "message": { "type": "string", "maxLength": 600 },
+        "status": { "type": "string", "enum": ["New", "Contacted", "Processing", "Completed", "Cancelled"] },
+        "adminRemarks": { "type": "string", "maxLength": 600 },
+        "source": { "type": "string", "enum": ["website_form"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "customerName",
+        "mobileNumber",
+        "serviceId",
+        "serviceName",
+        "message",
+        "status",
+        "adminRemarks",
+        "source",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StaffAccount": {
+      "title": "StaffAccount",
+      "description": "Authorized admin and staff operator accounts keyed by lowercase email.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "maxLength": 120 },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "role": { "type": "string", "enum": ["admin", "staff"] },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "displayName", "role", "isActive", "createdAt", "updatedAt"]
+    },
+    "AnalyticsEvent": {
+      "title": "AnalyticsEvent",
+      "description": "Anonymous page view, service view, search, and WhatsApp click intent events.",
+      "type": "object",
+      "properties": {
+        "eventType": { "type": "string", "enum": ["page_view", "service_view", "whatsapp_intent", "search"] },
+        "path": { "type": "string", "maxLength": 160 },
+        "serviceId": { "type": "string", "maxLength": 100 },
+        "queryText": { "type": "string", "maxLength": 100 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["eventType", "path", "serviceId", "queryText", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/siteSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/SiteSettings" },
+      "description": "Global site configuration and banners (document ID: public)."
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Service categories A through G."
+    },
+    "/services/{serviceId}": {
+      "schema": { "$ref": "#/entities/Service" },
+      "description": "All digital services with pricing, docs, and WhatsApp message templates."
+    },
+    "/enquiries/{enquiryId}": {
+      "schema": { "$ref": "#/entities/Enquiry" },
+      "description": "Customer website enquiries (PII protected: write-only for public create, staff/admin only for read/update/delete)."
+    },
+    "/staffAccounts/{staffEmail}": {
+      "schema": { "$ref": "#/entities/StaffAccount" },
+      "description": "Authorized staff and admin accounts."
+    },
+    "/analyticsEvents/{eventId}": {
+      "schema": { "$ref": "#/entities/AnalyticsEvent" },
+      "description": "Website usage events for admin analytics."
+    }
+  }
+}
